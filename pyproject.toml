@@ -1,0 +1,38 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "l2g-platform"
+version = "1.0.0"
+description = "L2G: literature mining with FastAPI + React"
+readme = "README.md"
+requires-python = ">=3.13.7,<3.14"
+dependencies = [
+  "torch>=2.0",
+  "transformers>=4.36",
+  "datasets>=2.16",
+  "numpy",
+  "pandas",
+  "scikit-learn>=1.3",
+  "requests",
+  "mygene>=3.2",
+  "accelerate>=0.26",
+]
+
+[project.optional-dependencies]
+api = [
+  "fastapi>=0.109",
+  "uvicorn[standard]>=0.27",
+  "python-multipart>=0.0.6",
+  "pydantic-settings>=2.1",
+  "openpyxl>=3.1",
+  "biopython>=1.83",
+]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["l2g_core*"]
+
+[tool.setuptools.package-data]
+l2g_core = ["py.typed"]

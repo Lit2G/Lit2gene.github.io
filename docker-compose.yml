@@ -1,0 +1,92 @@
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    container_name: l2g-backend
+    restart: unless-stopped
+    environment:
+      - HF_TOKEN=${HF_TOKEN}
+      - HF_HOME=/app/.cache/huggingface
+      - HF_HUB_CACHE=/app/.cache/huggingface/hub
+      - HUGGINGFACE_HUB_CACHE=/app/.cache/huggingface/hub
+      - BENT_SERVICE_URL=${BENT_SERVICE_URL:-}
+      - DATA_DIR=/app/data
+    volumes:
+      - ${HOME:-/root}/l2g-data:/app/data
+      - ${HOME:-/root}/.cache/huggingface:/app/.cache/huggingface
+      - bent-cache:/root/.cache/bent
+    ports:
+      - "8000:8000"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=3).read()"]
+      interval: 30s
+      timeout: 10s
+      retries: 10
+
+  bent-runtime:
+    profiles:
+      - bent
+    build:
+      context: .
+      dockerfile: bent_service/Dockerfile
+    container_name: l2g-bent-runtime
+    environment:
+      - TF_CPP_MIN_LOG_LEVEL=3
+    volumes:
+      - bent-cache:/root/.cache/bent
+    # Keep this service off by default; enable it via `--profile bent`.
+    # Set BENT_SERVICE_URL=http://bent-runtime:8010 when enabling bent method in backend.
+    ports:
+      - "8010:8010"
+    command: ["python", "-m", "bent_service.main", "--host", "0.0.0.0", "--port", "8010"]
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8010/health', timeout=5).read()"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+      args:
+        VITE_API_BASE: ${VITE_API_BASE:-/api}
+        VITE_COLAB_GITHUB_USERNAME: ${VITE_COLAB_GITHUB_USERNAME:-drkalani}
+        VITE_COLAB_GITHUB_REPO: ${VITE_COLAB_GITHUB_REPO:-L2G}
+        VITE_COLAB_GITHUB_BRANCH: ${VITE_COLAB_GITHUB_BRANCH:-main}
+    container_name: l2g-frontend
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
+    expose:
+      - "80"
+
+  gateway:
+    build: ./gateway
+    container_name: l2g-gateway
+    restart: unless-stopped
+    environment:
+      - SSL_DOMAIN=${SSL_DOMAIN:-l2g.aiteb.app}
+      - SSL_DOMAIN_ALIASES=${SSL_DOMAIN_ALIASES:-}
+      - SSL_CERTBOT_WEBROOT=${SSL_CERTBOT_WEBROOT:-/var/www/certbot}
+    ports:
+      - "80:80"
+      - "443:443"
+    env_file:
+      - .env
+    volumes:
+      - /etc/letsencrypt:/etc/letsencrypt:ro
+      - /var/www/certbot:/var/www/certbot
+    depends_on:
+      - backend
+      - frontend
+    healthcheck:
+      test: ["CMD-SHELL", "nginx -t"]
+      interval: 30s
+      timeout: 5s
+      retries: 12
+
+volumes:
+  bent-cache:
