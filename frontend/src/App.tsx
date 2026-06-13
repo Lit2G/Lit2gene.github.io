@@ -155,9 +155,9 @@ function SiteHeader() {
           <Link to="/" className="brand" aria-label="L2G home">
             <img src={l2gLogo} className="brand-logo" alt="L2G logo" />
             <span className="brand-text">
-            <span className="brand-title">L2G</span>
+            <span className="brand-title">L2G:&nbsp;Literature&nbsp;To&nbsp;Gene</span>
             <span className="brand-sub">
-             Literature&nbsp;to&nbsp;Gene · NLP Pipeline for Disease–Gene Extraction
+             The NLP Pipeline for Disease–Gene Extraction
             </span>
             </span>
           </Link>
@@ -246,7 +246,7 @@ function SiteFooter() {
           L2G — Literature to Gene · Regenerative Medicine Research Center, Isfahan University of Medical Sciences
         </p>
         <nav className="footer-links">
-          <a href="https://github.com/Lit2G" target="_blank" rel="noopener noreferrer">
+          <a href="https://github.com/Lit2Gene" target="_blank" rel="noopener noreferrer">
             <span className="dot"></span>GitHub
           </a>
           <a href="https://dkd-map.github.io" target="_blank" rel="noopener noreferrer">
